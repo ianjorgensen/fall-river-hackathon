@@ -33,7 +33,6 @@ setInterval(function() {
       console.log('Reading: ', data.sgv + 'mg/dl');
       bc.bolus(null, data.sgv).toFixed(3);
       console.log('iob: ', bc.iob().toFixed(3));
-      console.log('');
     }
 
     if (data) {

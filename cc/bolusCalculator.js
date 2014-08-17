@@ -1,5 +1,6 @@
 var _ = require('underscore');
-
+var sys = require('sys');
+var exec = require('child_process').exec;
 /*
 add storing and reading to file make as command line
 */
@@ -28,7 +29,7 @@ module.exports = function(options) {
         var increments = Math.round(bolus/options.pumpStepSize);
 
         bolus = increments * options.pumpStepSize;
-        
+
         if (options.log) {
           console.log('food bolus:', bolusFood);
           console.log('correction bolus:', bolusCorrection);
@@ -67,6 +68,13 @@ module.exports = function(options) {
     boluses.push({
       value: bolus,
       time: Date.now()
+    });
+
+    console.log('Sending bolus');
+
+    /*path sudo ./../../decoding-carelink/bin/mm-bolus.py --serial 913995 --port /dev/ttyUSB0 --554 0.2 */
+    exec("sudo ./../../decoding-carelink/bin/mm-bolus.py --serial 913995 --port /dev/ttyUSB0 --554 " + bolus, function(error, stdout, stderr) {
+      console.log(error, stdout, stderr);
     });
 
     return bolus;
