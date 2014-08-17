@@ -8,7 +8,8 @@ module.exports = function(options) {
     ic: 10,
     isf: 2.3,
     target: 5.5,
-    insulinActionTime: 4 * 60 * 60 * 1000
+    insulinActionTime: 4 * 60 * 60 * 1000,
+    pumpStepSize: 0.025
   });
 
   var boluses = options.boluses || [];
@@ -16,13 +17,22 @@ module.exports = function(options) {
   var calculator = {
       bolus: function(carbs, bg, iob) {
         var bolusFood = carbs/options.ic;
-        var bolusCorrection = bg ? (bg - options.target/options.isf) : 0;
-        var bolus = bolusFood + bolusCorrection + iob;
+        var bolusCorrection = bg ? ((bg - options.target)/options.isf)  - iob : 0;
+        var bolus = bolusFood + bolusCorrection;
 
+        if (bolus < 0) {
+          bolus = 0;
+        }
+
+        // convert to pump increments
+        var increments = Math.round(bolus/options.pumpStepSize);
+
+        bolus = increments * options.pumpStepSize;
+        
         if (options.log) {
           console.log('food bolus:', bolusFood);
           console.log('correction bolus:', bolusCorrection);
-          console.log('bolus:', bolus);
+          console.log('bolus:', bolus.toFixed(3));
         }
 
         return bolus;
@@ -45,7 +55,7 @@ module.exports = function(options) {
     var iob = 0;
 
     for (var i in boluses) {
-        iob += calculator.iob(boluses[i]);
+        iob = iob + calculator.iob(boluses[i]);
     }
 
     return iob;
@@ -63,7 +73,9 @@ module.exports = function(options) {
   };
 
   return {
-    boluses: boluses,
+    boluses: function() {
+      return boluses;
+    },
     bolus: bolus,
     iob: iob
   };
